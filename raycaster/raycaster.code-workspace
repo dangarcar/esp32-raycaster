@@ -1,0 +1,71 @@
+{
+	"folders": [
+		{
+			"name": "raycaster",
+			"path": "."
+		},
+		{
+			"name": "peripherals",
+			"path": "../peripherals"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"random": "cpp",
+			"array": "cpp",
+			"*.tcc": "cpp",
+			"string": "cpp",
+			"unordered_map": "cpp",
+			"unordered_set": "cpp",
+			"memory": "cpp",
+			"optional": "cpp",
+			"string_view": "cpp",
+			"fstream": "cpp",
+			"istream": "cpp",
+			"ostream": "cpp",
+			"vector": "cpp",
+			"sstream": "cpp",
+			"streambuf": "cpp",
+			"functional": "cpp",
+			"tuple": "cpp",
+			"cmath": "cpp",
+			"atomic": "cpp",
+			"deque": "cpp",
+			"iterator": "cpp",
+			"memory_resource": "cpp",
+			"system_error": "cpp",
+			"queue": "cpp",
+			"iostream": "cpp",
+			"run": "cpp",
+			"cctype": "cpp",
+			"chrono": "cpp",
+			"clocale": "cpp",
+			"cstdarg": "cpp",
+			"cstddef": "cpp",
+			"cstdint": "cpp",
+			"cstdio": "cpp",
+			"cstdlib": "cpp",
+			"cstring": "cpp",
+			"ctime": "cpp",
+			"cwchar": "cpp",
+			"cwctype": "cpp",
+			"exception": "cpp",
+			"algorithm": "cpp",
+			"map": "cpp",
+			"numeric": "cpp",
+			"ratio": "cpp",
+			"set": "cpp",
+			"type_traits": "cpp",
+			"utility": "cpp",
+			"initializer_list": "cpp",
+			"iomanip": "cpp",
+			"iosfwd": "cpp",
+			"limits": "cpp",
+			"new": "cpp",
+			"stdexcept": "cpp",
+			"cinttypes": "cpp",
+			"typeinfo": "cpp",
+			"thread": "cpp"
+		}
+	}
+}
