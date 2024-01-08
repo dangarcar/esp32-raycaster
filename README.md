@@ -16,7 +16,7 @@ Some of the sprites are taken from 1993's Doom and some textures from Minecraft.
 It is made with a Lilygo T3 v1.6 LoRa 32 as the main processor, a 3.5 inch TFT9846 screen as the display, an Arduino Mega 2560 as the peripheral receiver with one keypad and a PS2 mouse. The two controller communicate between them with I2C. The mouse and the keypad are not attached directly to the esp32 because there aren't enough pins to connect them.
 This setup can run at an average of 65ms the frame, a bit more than 15 FPS, better than I thought at first, but worse than I'd like.
 
-![A photo of the circuit](assets/hardware.jpg)
+![A photo of the circuit](assets/hardware1.jpg)
 
 
 ## SDL2 port
