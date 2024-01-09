@@ -43,7 +43,7 @@ public:
     void damage(int amount);
     void heal(int amount);
     void giveKey(int door);
-    void drawUI(float dt);
+    void drawUI();
 
     float getAngleRelativeTo(float theta) const {
         return _yaw - theta;
@@ -127,7 +127,7 @@ void Player::giveKey(int door) {
     _pickStart = getTime();
 }
 
-void Player::drawUI(float dt) {
+void Player::drawUI() {
     auto time = getTime();
 
     if(_canShoot)
@@ -137,6 +137,14 @@ void Player::drawUI(float dt) {
     if(_shoot)
         Screen::drawTexture(90+14, Screen::SCREEN_HEIGHT-pistol1.h-33, pistol1);
 
+    if(time - _hurtStart < HURT_TIME) {
+        Screen::redify();
+    } else if(time - _healStart < HURT_TIME) {
+        Screen::greenify();
+    } else if(time - _pickStart < HURT_TIME) {
+        Screen::blueify();
+    }
+
     if(keyArray[9])
         Screen::drawTexture(200, 1, small_key);
     if(keyArray[8])
@@ -144,21 +152,13 @@ void Player::drawUI(float dt) {
 
     int h = health;
     for(int i=0; i<MAX_HEALTH/2; ++i) {
-        if(h <= 0)
-            Screen::drawTexture(1+i*16, 1, heart_empty);
-        else if(h == 1)
+        if(h == 1)
             Screen::drawTexture(1+i*16, 1, heart_half);
-        else
+        else if(h > 1)
             Screen::drawTexture(1+i*16, 1, heart_full);
+        else
+            Screen::drawTexture(1+i*16, 1, heart_empty);
 
         h -= 2;
-    }
-
-    if(time - _hurtStart < HURT_TIME) {
-        Screen::redify();
-    } else if(time - _healStart < HURT_TIME) {
-        Screen::greenify();
-    } else if(time - _pickStart < HURT_TIME) {
-        Screen::blueify();
     }
 }
