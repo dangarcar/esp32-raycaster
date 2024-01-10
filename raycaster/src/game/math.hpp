@@ -30,10 +30,8 @@ inline void operator*=(Vector2& a, float scalar) {
 }
 
 void rotate(Vector2& v, float angle) {
-    float theta = radians(angle);
-
-    float cs = cosf(theta);
-    float sn = sinf(theta);
+    float cs = cosf(angle);
+    float sn = sinf(angle);
 
     v.x = v.x * cs - v.y * sn;
     v.y = v.x * sn + v.y * cs;

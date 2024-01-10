@@ -6,10 +6,7 @@ This is a PlatformIO project with esp32 that is a raycaster able to run on esp32
 ## The game
 ![A photo of gameplay in the arduino](assets/gameplay.jpg)
 
-The game is a raycaster inspired by this in this [tutorial](https://lodev.org/cgtutor/raycasting.html) that works in a resolution of 240x160 px, the quarter of the screen's resolution, so the screen buffer can be held in esp32's RAM, making the entire code more portable. The objective of the game is to catch the keys and go to the doors, avoiding the enemys.
-Some of the sprites are taken from 1993's Doom and some textures from Minecraft.
-
-:warning: **The level 2 is not finished completely!**
+The game is a raycaster inspired by this in this [tutorial](https://lodev.org/cgtutor/raycasting.html) that works in a resolution of 240x160 px, the quarter of the screen's resolution, so the screen buffer can be held in esp32's RAM, making the entire code more portable. The objective of the game is to catch the keys and go to the doors through the mazes, avoiding the enemys. Some of the sprites are taken from 1993's Doom and some textures from Minecraft. The game has 3 levels, from easiest to hardest.
 
 
 ## Hardware

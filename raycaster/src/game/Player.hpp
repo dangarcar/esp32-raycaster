@@ -17,7 +17,7 @@ class Player {
     float _vel = 2.0f;
 
     bool _shoot = false, _open = false;
-    bool _canShoot = true;
+    bool _canShoot = true, _inRange = false;
     uint64_t _hurtStart = 0, _healStart = 0, _shotStart = 0, _pickStart = 0;
 
     Direction direction;
@@ -42,7 +42,8 @@ public:
     void damage(int amount);
     void heal(int amount);
     void giveKey(int door);
-    void drawUI();
+    void drawUI(Vector2 dst);
+    void drawCompass(Vector2 dst);
 
     float getAngleRelativeTo(float theta) const {
         return _yaw - theta;
@@ -80,11 +81,12 @@ void Player::update(InputData input, float dt) {
     }
 
     _canShoot = getTime()-_shotStart > SHOT_TIME;
+    _inRange = spriteAtCenter != -1 && !EntityManager::entities[spriteAtCenter]->isDead();
     _shoot = input.leftClick() && _canShoot;
     if(_shoot) {
         _shotStart = getTime();
 
-        if(spriteAtCenter != -1 && EntityManager::entities[spriteAtCenter]->isDead() == false){
+        if(_inRange){
             float x = EntityManager::entities[spriteAtCenter]->sprite.x - pos.x;
             float y = EntityManager::entities[spriteAtCenter]->sprite.y - pos.y;
             int dmg = max(0, SHOT_DAMAGE-(x*x+y*y)/16);
@@ -126,15 +128,27 @@ void Player::giveKey(int door) {
     _pickStart = getTime();
 }
 
-void Player::drawUI() {
+void Player::drawCompass(Vector2 dst) {
+    Screen::drawTexture(210, 130, compass_base);
+
+    Vector2 diff = normalized(Vector2(dst.x-pos.x, dst.y-pos.y));
+    float needle = dot(diff, dir);
+    bool z = diff.x * dir.y - dir.x * diff.y > 0;
+    int dx = (z? 1:-1) * int(ceilf(10*sqrtf(1.f-needle*needle)));
+    int dy = ceilf(10*needle);
+
+    Screen::drawLine(222, 142, 222 + dx, 142 - dy, 0xf800);
+}
+
+void Player::drawUI(Vector2 dst) {
     auto time = getTime();
 
     if(_canShoot)
-        Screen::drawTexture(90, Screen::SCREEN_HEIGHT-pistol0.h, pistol0);
+        Screen::drawTexture(85, Screen::SCREEN_HEIGHT-pistol0.h, pistol0);
     else 
-        Screen::drawTexture(90, Screen::SCREEN_HEIGHT-pistol_down.h, pistol_down);
+        Screen::drawTexture(85, Screen::SCREEN_HEIGHT-pistol_down.h, pistol_down);
     if(_shoot)
-        Screen::drawTexture(90+14, Screen::SCREEN_HEIGHT-pistol1.h-33, pistol1);
+        Screen::drawTexture(85+14, Screen::SCREEN_HEIGHT-pistol1.h-33, pistol1);
 
     if(time - _hurtStart < HURT_TIME) {
         Screen::redify();
@@ -160,4 +174,8 @@ void Player::drawUI() {
 
         h -= 2;
     }
+
+    Screen::drawTexture(114, 75, _inRange? crosshair2:crosshair1);
+
+    drawCompass(dst);
 }

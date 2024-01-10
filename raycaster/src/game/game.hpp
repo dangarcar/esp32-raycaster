@@ -26,7 +26,7 @@ namespace Game {
         EntityManager::updateSprites();
 
         camera.draw();
-        player.drawUI();
+        player.drawUI(level->escapePos);
 
         if(transport) {
             transport = false;
@@ -41,7 +41,7 @@ namespace Game {
         if(player.health <= 0) {
             for(int t=0; t<5; ++t) Screen::redify();
             Screen::drawTexture(0, 0, {screen_death, 240, 160});
-            player.drawUI(); //To make the hearts look empty
+            player.drawUI(level->escapePos); //To make the hearts look empty
         } else if(level == &WIN) {
             level = &INITIAL_LEVEL;
 

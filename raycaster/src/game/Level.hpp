@@ -12,14 +12,15 @@
 
 struct Level {
     Level *const next;
-    const Vector2 initialPos;
+    const Vector2 initialPos, escapePos;
     uint16_t* const floor_tex;
     const uint16_t fog;
     uint8_t (*map)[MAP_WIDTH];
     void (*const startCallback)();
 
-    Level(Level *const next, const Vector2 init, const uint16_t fog, uint8_t (*newMap)[MAP_WIDTH], uint16_t* floor_tex, void (*startCallback)()): 
+    Level(Level *const next, const Vector2 init, const Vector2 end, const uint16_t fog, uint8_t (*newMap)[MAP_WIDTH], uint16_t* floor_tex, void (*startCallback)()): 
         initialPos{init},
+        escapePos{end},
         fog{fog},  
         startCallback{startCallback},
         floor_tex{floor_tex},
@@ -40,9 +41,9 @@ struct Level {
     }
 };
 
-Level WIN(nullptr, {}, 0, nullptr, nullptr, []{});
+Level WIN(nullptr, {}, {}, 0, nullptr, nullptr, []{});
 
-Level FINAL_LEVEL(&WIN, {30.f,62.f}, 0x0000, map3, floor_wood, []{
+Level FINAL_LEVEL(&WIN, {30.f,62.f}, {2.5f,2.5f}, 0x0000, map3, floor_wood, []{
     EntityManager::addEntity(new Trasporter(2,2,1,1));
     EntityManager::addEntity(new Key(28.5, 60.5, 8));
 
@@ -112,7 +113,7 @@ Level FINAL_LEVEL(&WIN, {30.f,62.f}, 0x0000, map3, floor_wood, []{
     }
 });
 
-Level SECOND_LEVEL(&FINAL_LEVEL, {30.f,62.f}, 0x9165, map2, floor_cobble, []{
+Level SECOND_LEVEL(&FINAL_LEVEL, {30.f,62.f}, {8.5f,1.5f}, 0x9165, map2, floor_cobble, []{
     EntityManager::addEntity(new Trasporter(8,1,1,1));
     EntityManager::addEntity(new Key(13.5, 31.5, 8));
 
@@ -142,7 +143,7 @@ Level SECOND_LEVEL(&FINAL_LEVEL, {30.f,62.f}, 0x9165, map2, floor_cobble, []{
     }
 });
 
-Level INITIAL_LEVEL(&SECOND_LEVEL, {30.f,62.f}, 0xbe9a, map1, floor_grass, []{
+Level INITIAL_LEVEL(&SECOND_LEVEL, {30.f,62.f}, {15.5f,2.5f}, 0xbe9a, map1, floor_grass, []{
     EntityManager::addEntity(new Trasporter(15,2,1,1));
     EntityManager::addEntity(new Key(20.5, 42.5, 9));
 
