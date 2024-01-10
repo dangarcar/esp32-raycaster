@@ -82,31 +82,31 @@ void Camera::drawSprites() {
         float transformX = invDet * (dir.y * spriteX - dir.x * spriteY);
         float transformY = invDet * (-plane.y * spriteX + plane.x * spriteY); // this is actually the depth inside the screen, that what Z is in 3D
 
-        if(transformY > 0) { //In screen
+        int spriteHW = abs(int(H / transformY)) / sprite.scale;
+
+        if(transformY > 0 && spriteHW > 0) { //In screen
             int spriteScreenX = int(W_2 * (1.f + transformX / transformY));
             int spriteScreenZ = int(sprite.z / transformY);
 
-            int spriteHeight = abs(int(H / transformY)) / sprite.scale;
-            int drawStartY = -spriteHeight/2 + H_2 + spriteScreenZ;
+            int drawStartY = -spriteHW/2 + H_2 + spriteScreenZ;
             if (drawStartY < 0) drawStartY = 0;
-            int drawEndY = spriteHeight/2 + H_2 + spriteScreenZ;
+            int drawEndY = spriteHW/2 + H_2 + spriteScreenZ;
             if (drawEndY >= H) drawEndY = H;
 
-            int spriteWidth = abs(int(H / (transformY))) / sprite.scale;
-            int drawStartX = -spriteWidth / 2 + spriteScreenX;
+            int drawStartX = -spriteHW / 2 + spriteScreenX;
             if (drawStartX < 0) drawStartX = 0;
-            int drawEndX = spriteWidth / 2 + spriteScreenX;
+            int drawEndX = spriteHW / 2 + spriteScreenX;
             if (drawEndX >= W) drawEndX = W - 1;
 
             for (int x=drawStartX; x<=drawEndX; ++x) {
-                int texX = int(256 * (x - (-spriteWidth / 2 + spriteScreenX)) * SPR_WIDTH / spriteWidth) / 256;
+                int texX = int(256 * (x - (-spriteHW / 2 + spriteScreenX)) * SPR_WIDTH / spriteHW) / 256;
 
                 if (x >= 0 && x < W && transformY < Zbuffer[x]) {
                     uint8_t blendDist = 255/fmaxf(1.f, transformY);
 
                     for(int y=drawStartY; y<drawEndY; ++y) {
-                        int d = (y-spriteScreenZ) * 256 - H * 128 + spriteHeight * 128; // 256 and 128 factors to avoid floats
-                        int texY = ((d * SPR_HEIGHT) / spriteHeight) / 256;
+                        int d = (y-spriteScreenZ) * 256 - H * 128 + spriteHW * 128; // 256 and 128 factors to avoid floats
+                        int texY = ((d * SPR_HEIGHT) / spriteHW) / 256;
 
                         uint16_t color = sprite.texture[SPR_WIDTH * texY + texX];
                         if (color != TRANSP) {
@@ -218,7 +218,7 @@ void Camera::drawFloor() {
         float rayDirX1 = dir.x + plane.x;
         float rayDirY1 = dir.y + plane.y;
 
-        float rowDistance = float(H_2) / (y - H_2);
+        float rowDistance = float(H_2) / float(y - H_2);
         uint8_t blendDist = 255*(float(y)/float(H_2)-1);
 
         float floorStepX = (rowDistance * 2.0f * plane.x) / W;

@@ -17,7 +17,7 @@ public:
 };
 
 namespace SpriteManager {
-    const int MAX_SPRITES = 128;
+    const int MAX_SPRITES = 64;
     Sprite sprites[MAX_SPRITES];
     int sprite_num = 0;
 

@@ -15,7 +15,6 @@ class Player {
     static constexpr uint64_t SHOT_TIME = 400000;
 
     float _vel = 2.0f;
-    float _rotateVel = 4.0f;
 
     bool _shoot = false, _open = false;
     bool _canShoot = true;
@@ -56,7 +55,7 @@ void Player::update(InputData input, float dt) {
     if(!input.correct)
         return;
 
-    _yaw -= input.x * dt * _rotateVel * DEG_TO_RAD;
+    _yaw -= input.x * dt * SENSITIVITY * DEG_TO_RAD;
     if(_yaw < 0.f) _yaw += M_2PI;
     else if(_yaw >= M_2PI) _yaw -= M_2PI;
     
@@ -151,7 +150,7 @@ void Player::drawUI() {
         Screen::drawTexture(200, 1, green_key);
 
     int h = health;
-    for(int i=0; i<MAX_HEALTH/2; ++i) {
+    for(int i=0; i*2<MAX_HEALTH; ++i) {
         if(h == 1)
             Screen::drawTexture(1+i*16, 1, heart_half);
         else if(h > 1)

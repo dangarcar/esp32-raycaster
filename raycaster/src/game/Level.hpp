@@ -15,10 +15,10 @@ struct Level {
     const Vector2 initialPos;
     uint16_t* const floor_tex;
     const uint16_t fog;
-    int (*map)[MAP_WIDTH];
+    uint8_t (*map)[MAP_WIDTH];
     void (*const startCallback)();
 
-    Level(Level *const next, const Vector2 init, const uint16_t fog, int (*newMap)[MAP_WIDTH], uint16_t* floor_tex, void (*startCallback)()): 
+    Level(Level *const next, const Vector2 init, const uint16_t fog, uint8_t (*newMap)[MAP_WIDTH], uint16_t* floor_tex, void (*startCallback)()): 
         initialPos{init},
         fog{fog},  
         startCallback{startCallback},
@@ -42,9 +42,7 @@ struct Level {
 
 Level WIN(nullptr, {}, 0, nullptr, nullptr, []{});
 
-Level FINAL_LEVEL(&WIN, {6, 6}/*{30.f,62.f}*/, 0x0000, map3, floor_wood, []{
-    player.giveKey(8);
-
+Level FINAL_LEVEL(&WIN, {30.f,62.f}, 0x0000, map3, floor_wood, []{
     EntityManager::addEntity(new Trasporter(2,2,1,1));
     EntityManager::addEntity(new Key(28.5, 60.5, 8));
 
@@ -158,5 +156,4 @@ Level INITIAL_LEVEL(&SECOND_LEVEL, {30.f,62.f}, 0xbe9a, map1, floor_grass, []{
     EntityManager::addEntity(new Enemy(15.5, 4.5));
 });
 
-//Level *level = &INITIAL_LEVEL;
-Level *level = &FINAL_LEVEL;
+Level *level = &INITIAL_LEVEL;
