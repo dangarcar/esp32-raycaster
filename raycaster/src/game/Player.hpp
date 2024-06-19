@@ -6,7 +6,7 @@
 #include "entity/Entity.hpp"
 
 #define MAX_HEALTH 16
-#define INVINCIBLE false
+#define INVINCIBLE true
 
 class Player {
     static constexpr int NOISE_DST_SQR = 900;

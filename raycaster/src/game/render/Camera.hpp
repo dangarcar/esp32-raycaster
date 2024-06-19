@@ -6,6 +6,11 @@
 #include "Sprite.hpp"
 #include "../map.h"
 
+//constexpr uint16_t AO_Levels[4] = {0xffff, 0x8410, 0x4a69, 0x18c3};
+constexpr float AO_Levels[4] = {1.0, 0.5, 0.3, 0.1};
+
+#define FOG_ACTIVE 1
+
 inline uint16_t blend(uint16_t c1, uint16_t c2, uint8_t alpha) {
 #ifndef FOG_ACTIVE
     return c1;
@@ -32,7 +37,24 @@ inline uint16_t blend(uint16_t c1, uint16_t c2, uint8_t alpha) {
 #endif
 }
 
-class Camera {    
+inline uint16_t smoothDarken(uint16_t c, float alpha) {
+    float r = (c >> 11) & 0x1f;
+    float g = (c >> 5) & 0x3f;
+    float b = c & 0x1f;
+
+    r = r*alpha;
+    g = g*alpha;
+    b = b*alpha;
+
+    return uint16_t( (int(r) << 11) | (int(g) << 5) | int(b) );
+}
+
+inline float interpolate(float c[4], float x, float y) {
+    return c[0]*(1.0-x)*(1.0-y) + c[1]*x*(1.0-y) + c[2]*(1.0-x)*y + c[3]*x*y;
+}
+
+class Camera {
+private:
     static constexpr int H = Screen::SCREEN_HEIGHT;
     static constexpr int W = Screen::SCREEN_WIDTH;
     static constexpr int H_2 = H/2;
@@ -50,22 +72,19 @@ public:
         plane = Vector2(dir.y, -dir.x);
     }
 
-    void draw();
+    void draw() {
+        drawWalls();
+        drawSprites();
+    }
 
 private:
-    void drawFloor();
     void drawWalls();
     void drawSprites();
+
+    float getAlpha(int y, float perpDistance, float floorXWall, float floorYWall);
 };
 
 Camera camera;
-
-void Camera::draw() {
-    drawFloor();
-    drawWalls();
-
-    drawSprites();
-}
 
 void Camera::drawSprites() {
     player.spriteAtCenter = -1;
@@ -115,13 +134,39 @@ void Camera::drawSprites() {
                                 if(EntityManager::entities[idx]->isDead() == false)
                                     player.spriteAtCenter = idx;
                             }
-                            Screen::drawPixel(x, y, blend(color, fog_color, blendDist));
+                            Screen::drawPixel(x, y, blend(color, fogColor, blendDist));
                         }
                     }
                 }
             }
         }        
     }
+}
+
+float Camera::getAlpha(int y, float perpDistance, float floorXWall, float floorYWall) {
+    float currentDist = H / (2.0 * y - H);
+    float weight = currentDist / perpDistance;
+
+    float currentFloorX = weight * floorXWall + (1.0 - weight) * pos.x;
+    float currentFloorY = weight * floorYWall + (1.0 - weight) * pos.y;
+
+    int tx = int(float(FLOOR_WIDTH) * currentFloorX) & (FLOOR_WIDTH-1);
+    int ty = int(float(FLOOR_HEIGHT) * currentFloorY) & (FLOOR_HEIGHT-1);
+
+    int floorX = int(currentFloorX), floorY = int(currentFloorY);
+    int aoVertex[4] = {
+        !!(gameMap[floorY-1][floorX-1]) + !!(gameMap[floorY-1][floorX]) + !!(gameMap[floorY][floorX-1]), //Top Left
+        !!(gameMap[floorY-1][floorX]) + !!(gameMap[floorY-1][floorX+1]) + !!(gameMap[floorY][floorX+1]), //Top Right
+        !!(gameMap[floorY][floorX-1]) + !!(gameMap[floorY+1][floorX-1]) + !!(gameMap[floorY+1][floorX]), //Bottom Left
+        !!(gameMap[floorY][floorX+1]) + !!(gameMap[floorY+1][floorX+1]) + !!(gameMap[floorY+1][floorX]), //Bottom Right
+    };
+
+    float aoColors[4];
+    for(int i=0; i<4; ++i)
+        aoColors[i] = AO_Levels[aoVertex[i]];
+
+    float xPer = float(tx)/(FLOOR_WIDTH-1), yPer = float(ty)/(FLOOR_HEIGHT-1);
+    return interpolate(aoColors, xPer, yPer);
 }
 
 void Camera::drawWalls() {
@@ -188,9 +233,29 @@ void Camera::drawWalls() {
         if(side == 0 && rayDirX > 0.0f) texX = TEX_WIDTH - texX - 1;
         if(side == 1 && rayDirY < 0.0f) texX = TEX_WIDTH - texX - 1;
 
-        float step = float(TEX_HEIGHT) / float(lineHeight);
+        float step = float(TEX_HEIGHT) / float(lineHeight+1);
         float texPos = (drawStart - H_2 + lineHeight / 2) * step;
 
+        //DRAW FLOOR
+        float floorXWall, floorYWall; //x, y position of the floor texel at the bottom of the wall
+        if(side == 0 && rayDirX > 0) {
+            floorXWall = mapX;
+            floorYWall = mapY + wallX;
+        } else if(side == 0 && rayDirX < 0) {
+            floorXWall = mapX + 1.0;
+            floorYWall = mapY + wallX;
+        } else if(side == 1 && rayDirY > 0) {
+            floorXWall = mapX + wallX;
+            floorYWall = mapY;
+        } else {
+            floorXWall = mapX + wallX;
+            floorYWall = mapY + 1.0;
+        }
+
+        //Brightness stuff
+        float aoAlpha = getAlpha(drawEnd, perpDistance, floorXWall, floorYWall);
+
+        //DRAW WALLS
         for(int y=drawStart; y<=drawEnd; ++y) {
             int texY = int(texPos) & (TEX_HEIGHT-1); //Mask to not overflow
             texPos += step;
@@ -204,41 +269,54 @@ void Camera::drawWalls() {
                 player.blockCenterY = mapY;
             }
 
-            Screen::drawPixel(x, y, blend(c, fog_color, blendDist));
+            auto yAlpha = float(texY)/(TEX_HEIGHT-1);
+            float alpha = 1.0 + (aoAlpha - 1.0) * yAlpha;
+            c = smoothDarken(c, SDL_clamp(alpha, 0.0, 1.0));
+
+            Screen::drawPixel(x, y, blend(c, fogColor, blendDist));
         }
 
         Zbuffer[x] = perpDistance;
-    }
-}
 
-void Camera::drawFloor() {
-    for(int y=H_2; y<H; ++y) {
-        float rayDirX0 = dir.x - plane.x;
-        float rayDirY0 = dir.y - plane.y;
-        float rayDirX1 = dir.x + plane.x;
-        float rayDirY1 = dir.y + plane.y;
+        //DRAW FLOOR
+        if(drawEnd < 0) 
+            drawEnd = H; 
+        for(int y=drawEnd+1; y<H; ++y) {
+            float currentDist = H / (2.0 * y - H);
+            float weight = currentDist / perpDistance;
 
-        float rowDistance = float(H_2) / float(y - H_2);
-        uint8_t blendDist = 255*(float(y)/float(H_2)-1);
+            float currentFloorX = weight * floorXWall + (1.0 - weight) * pos.x;
+            float currentFloorY = weight * floorYWall + (1.0 - weight) * pos.y;
 
-        float floorStepX = (rowDistance * 2.0f * plane.x) / W;
-        float floorStepY = (rowDistance * 2.0f * plane.y) / W;
+            int tx = int(float(FLOOR_WIDTH) * currentFloorX) & (FLOOR_WIDTH-1);
+            int ty = int(float(FLOOR_HEIGHT) * currentFloorY) & (FLOOR_HEIGHT-1);
 
-        float floorX = pos.x + rowDistance * rayDirX0;
-        float floorY = pos.y + rowDistance * rayDirY0;
+            uint16_t c = floorTexture[FLOOR_WIDTH*ty + tx];
 
-        for(int x=0; x<W; ++x) {
-            int cellX = (int)(floorX);
-            int cellY = (int)(floorY);
+            int floorX = int(currentFloorX), floorY = int(currentFloorY);
+            int aoVertex[4] = {
+                !!(gameMap[floorY-1][floorX-1]) + !!(gameMap[floorY-1][floorX]) + !!(gameMap[floorY][floorX-1]), //Top Left
+                !!(gameMap[floorY-1][floorX]) + !!(gameMap[floorY-1][floorX+1]) + !!(gameMap[floorY][floorX+1]), //Top Right
+                !!(gameMap[floorY][floorX-1]) + !!(gameMap[floorY+1][floorX-1]) + !!(gameMap[floorY+1][floorX]), //Bottom Left
+                !!(gameMap[floorY][floorX+1]) + !!(gameMap[floorY+1][floorX+1]) + !!(gameMap[floorY+1][floorX]), //Bottom Right
+            };
 
-            int tx = int(float(FLOOR_WIDTH) * (floorX - cellX)) & (FLOOR_WIDTH-1);
-            int ty = int(float(FLOOR_HEIGHT) * (floorY - cellY)) & (FLOOR_HEIGHT-1);
+            float aoColors[4];
+            for(int i=0; i<4; ++i)
+                aoColors[i] = AO_Levels[aoVertex[i]];
 
-            floorX += floorStepX;
-            floorY += floorStepY;
-            
-            //Screen::drawPixel(x, H-y-1, blend(floor_wood[FLOOR_WIDTH*ty + tx], fog_color, blendDist));
-            Screen::drawPixel(x, y, blend(floor_texture[FLOOR_WIDTH*ty + tx], fog_color, blendDist));
+            float xPer = float(tx)/(FLOOR_WIDTH-1), yPer = float(ty)/(FLOOR_HEIGHT-1);
+            auto alpha = interpolate(aoColors, xPer, yPer);
+            c = smoothDarken(c, SDL_clamp(alpha, 0.0, 1.0));
+            aoAlpha = __min(aoAlpha, alpha);
+
+            float floorFogDist = 255/fmaxf(currentDist, 1.0);
+            Screen::drawPixel(x, y, blend(c, fogColor, floorFogDist));
+        }
+
+        //DRAW SKY
+        for(int y=0; y<drawStart; ++y) {
+            Screen::drawPixel(x, y, fogColor);
         }
     }
 }

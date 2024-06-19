@@ -7,7 +7,35 @@
 
 #define SWAP(T, a, b) do { T tmp = a; a = b; b = tmp; } while (0)
 
-#define FOG_ACTIVE 1
+struct Color {
+    int r,g,b;
+
+    Color(uint16_t bit) {
+        r = (bit & 0xf800) >> 8;
+        g = (bit & 0x7e0) >> 3;
+        b = (bit & 0x1f) << 3;
+    }
+
+    uint16_t to16Bit() {
+        return uint16_t((r << 8) & 0xf800) | uint16_t((g << 3) & 0x7e0) | uint16_t((b >> 3) & 0x1f);
+    }
+};
+
+Color operator*(Color c, float f) {
+        c.r *= f;
+        c.g *= f;
+        c.b *= f;
+
+        return c;
+}
+
+Color operator+(Color a, Color b) {
+    a.r = __min(255, b.r+a.r);
+    a.g = __min(255, b.g+a.g);
+    a.b = __min(255, b.b+a.b);
+
+    return a;
+}
 
 namespace Screen {
     static const size_t SCREEN_WIDTH = 240;
@@ -18,7 +46,7 @@ namespace Screen {
 
     inline void clear() {
         for(int i=0; i<SCREEN_SIZE; ++i)
-            _screen[i] = fog_color;
+            _screen[i] = fogColor;
     }
 
     //Also renders the image

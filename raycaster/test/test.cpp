@@ -18,18 +18,8 @@ SDL_Window* window;
 SDL_Renderer* renderer;
 SDL_Event event;
 
-struct Color {
-    int r,g,b;
-
-    Color(uint16_t bit) {
-        r = (bit & 0xf800) >> 8;
-        g = (bit & 0x7e0) >> 3;
-        b = (bit & 0x1f) << 3;
-    }
-};
-
 void render() {
-    Color background = Color(fog_color);
+    Color background = Color(fogColor);
     SDL_SetRenderDrawColor(renderer, background.r, background.g, background.b, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(renderer);
     
@@ -38,9 +28,10 @@ void render() {
             Color pixel = Color(Screen::_screen[y*Screen::SCREEN_WIDTH + x]);
             SDL_SetRenderDrawColor(renderer, pixel.r, pixel.g, pixel.b, SDL_ALPHA_OPAQUE);
             
-            for(int i=0; i<16; ++i) {
-                SDL_RenderDrawPoint(renderer, x*4 + i%4, y*4 + i/4);
-            }
+            struct SDL_Rect rect;
+            rect.x = x*4; rect.y = y*4;
+            rect.h = rect.w = 4;
+            SDL_RenderFillRect(renderer, &rect);
         }
     }
 

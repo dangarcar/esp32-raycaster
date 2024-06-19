@@ -13,17 +13,17 @@
 struct Level {
     Level *const next;
     const Vector2 initialPos, escapePos;
-    uint16_t* const floor_tex;
+    uint16_t* const floorTex;
     const uint16_t fog;
     uint8_t (*map)[MAP_WIDTH];
     void (*const startCallback)();
 
-    Level(Level *const next, const Vector2 init, const Vector2 end, const uint16_t fog, uint8_t (*newMap)[MAP_WIDTH], uint16_t* floor_tex, void (*startCallback)()): 
+    Level(Level *const next, const Vector2 init, const Vector2 end, const uint16_t fog, uint8_t (*newMap)[MAP_WIDTH], uint16_t* floorTex, void (*startCallback)()): 
         initialPos{init},
         escapePos{end},
         fog{fog},  
         startCallback{startCallback},
-        floor_tex{floor_tex},
+        floorTex{floorTex},
         next{next} {
             map = newMap;
     }
@@ -35,8 +35,8 @@ struct Level {
         startCallback();
 
         gameMap = map;
-        fog_color = fog;
-        floor_texture = floor_tex;
+        fogColor = fog;
+        floorTexture = floorTex;
         player.pos = initialPos;
     }
 };
@@ -157,4 +157,4 @@ Level INITIAL_LEVEL(&SECOND_LEVEL, {30.f,62.f}, {15.5f,2.5f}, 0xbe9a, map1, floo
     EntityManager::addEntity(new Enemy(15.5, 4.5));
 });
 
-Level *level = &INITIAL_LEVEL;
+Level *level = &FINAL_LEVEL;
